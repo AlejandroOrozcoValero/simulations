@@ -2,14 +2,13 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import os
 import numpy as np
-from scipy.signal import welch
-from scipy.stats import linregress
-from fooof import FOOOF
 import argparse
+from ncpi import Features
 
 
 BASE_PATH = '/LUSTRE/home/TIC117/cmg/alejandro'
 PARAMETERS = ['J_EE', 'J_IE', 'J_EI', 'J_II', 'tau_syn_E', 'tau_syn_I', 'J_ext']
+
 
 def load_cdm(trial_path, normalize=True, index=2):
     """
@@ -30,66 +29,47 @@ def load_cdm(trial_path, normalize=True, index=2):
     return cdm
 
 
-def compute_fooof(signal, fs, nperseg=None, aperiodic_mode='fixed',
-                  freq_range=(1., 150.), peak_width_limits=(0.5, 12),
-                  max_n_peaks=5, r_squared_th=None):
+def create_features_extractor(fs, freq_range, nperseg, r_squared_th=None):
     """
-    Aplica FOOOF a una señal individual.
+    Crea un objeto Features configurado para el análisis espectral.
 
     Args:
-        signal: np.ndarray con la señal CDM
         fs: frecuencia de muestreo
-        nperseg: muestras por segmento welch (default: fs * 0.5)
-        aperiodic_mode: 'fixed' o 'knee'
-        freq_range: rango de frecuencias para el fit
-        peak_width_limits: límites de ancho de pico
-        max_n_peaks: número máximo de picos
-        r_squared_th: si se especifica, retorna None si r2 < threshold
+        freq_range: tupla (fmin, fmax) para el rango de frecuencias
+        nperseg: muestras por segmento Welch
+        r_squared_th: umbral de r_squared para filtrar resultados
 
     Returns:
-        dict con resultados FOOOF o None si no pasa el umbral
+        Features: objeto configurado para specparam
     """
-    if nperseg is None:
-        nperseg = int(fs * 0.5)
-
-    fm = FOOOF(
-        peak_width_limits=peak_width_limits,
-        max_n_peaks=max_n_peaks,
-        peak_threshold=2.0,
-        min_peak_height=0.0,
-        aperiodic_mode=aperiodic_mode,
-        verbose=False
-    )
-
-    freqs, psd = welch(signal, fs, nperseg=nperseg)
-    fm.fit(freqs=freqs, power_spectrum=psd, freq_range=freq_range)
-
-    if r_squared_th is not None and fm.r_squared_ < r_squared_th:
-        return None
-
-    result = {
-        'exponent': fm.aperiodic_params_[1],
-        'offset': fm.aperiodic_params_[0],
-        'r_squared': fm.r_squared_,
-        'error': fm.error_,
-        'n_peaks': len(fm.peak_params_),
-        'peak_params': fm.peak_params_,
-        'aperiodic_params': fm.aperiodic_params_,
+    params = {
+        'fs': fs,
+        'freq_range': freq_range,
+        'welch_kwargs': {'nperseg': nperseg},
+        'normalize': False,  # Ya normalizamos en load_cdm
+        'select_peak': 'max_pw',
     }
 
-    if len(fm.peak_params_) > 0:
-        result['central_freq'] = np.mean(fm.peak_params_[:, 0])
-        result['power'] = np.mean(fm.peak_params_[:, 1])
-        result['bandwidth'] = np.mean(fm.peak_params_[:, 2])
-    else:
-        result['central_freq'] = np.nan
-        result['power'] = np.nan
-        result['bandwidth'] = np.nan
+    if r_squared_th is not None:
+        params['metric_thresholds'] = {'gof_rsquared': r_squared_th}
+        params['metric_policy'] = 'reject'
 
-    return result
+    return Features(method='specparam', params=params)
 
 
-def create_dataframe(CONF_PATH):
+def create_dataframe(CONF_PATH, freq_range=(5., 45.), nperseg=None, r_squared_th=0.9):
+    """
+    Crea un DataFrame con los resultados del análisis spectral.
+
+    Args:
+        CONF_PATH: ruta al directorio de configuración
+        freq_range: tupla (fmin, fmax) para el rango de frecuencias del fit
+        nperseg: muestras por segmento Welch (default: fs * 0.5)
+        r_squared_th: umbral de r_squared para filtrar resultados
+
+    Returns:
+        tuple: (DataFrame con resultados, nombre del archivo)
+    """
     conf_split = CONF_PATH.split('/')
     conf = conf_split[-2]
     print(CONF_PATH)
@@ -103,6 +83,18 @@ def create_dataframe(CONF_PATH):
     FS = 1000. / (10. * 0.0625)  # Sampling frequency
     print(param)
 
+    # Configurar nperseg por defecto
+    if nperseg is None:
+        nperseg = int(FS * 0.5)
+
+    # Crear el extractor de features
+    features_extractor = create_features_extractor(
+        fs=FS,
+        freq_range=freq_range,
+        nperseg=nperseg,
+        r_squared_th=r_squared_th
+    )
+
     file_name = f"{model_type}-{param}-{conf}"
     fooof_dic = {
         'ID': [],
@@ -112,7 +104,6 @@ def create_dataframe(CONF_PATH):
         'CentralFreq': [],
         'Power': []
     }
-
 
     trials = []
     for trial in os.listdir(CONF_PATH):
@@ -148,25 +139,24 @@ def create_dataframe(CONF_PATH):
         # Cargar y normalizar la señal CDM
         signal = load_cdm(trial_path, normalize=True, index=3)
 
-        # Calcular FOOOF para esta señal
-        fooof_result = compute_fooof(
-            signal=signal,
-            fs=FS,
-            freq_range=(1., 100.),
-            r_squared_th=0.9  # Filtrar por r_squared >= 0.9
-        )
+        # Calcular features usando ncpi.Features
+        result = features_extractor.specparam(sample=signal)
 
-        # Si el resultado no pasa el umbral, saltar
-        if fooof_result is None:
+        # Si el resultado no es válido (no pasa el umbral), saltar
+        if not result.get('valid', True):
             continue
+
+        # Extraer el exponente (segundo elemento de aperiodic_params)
+        aperiodic_params = result['aperiodic_params']
+        exponent = aperiodic_params[1] if len(aperiodic_params) > 1 else np.nan
 
         # Agregar al diccionario
         fooof_dic['ID'].append(param)
         fooof_dic['Trial'].append(i)
         fooof_dic['Group'].append(configs)
-        fooof_dic['Exponent'].append(fooof_result['exponent'])
-        fooof_dic['CentralFreq'].append(fooof_result['central_freq'])
-        fooof_dic['Power'].append(fooof_result['power'])
+        fooof_dic['Exponent'].append(exponent)
+        fooof_dic['CentralFreq'].append(result['peak_cf'])
+        fooof_dic['Power'].append(result['peak_pw'])
 
     fooof_df = pd.DataFrame(fooof_dic)
 
@@ -174,13 +164,26 @@ def create_dataframe(CONF_PATH):
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser()
-    parser.add_argument('conf_path', type=str)
-    parser.add_argument('--output_dir', type=str, default='results')
+    parser = argparse.ArgumentParser(
+        description='Análisis espectral de señales CDM usando ncpi.Features'
+    )
+    parser.add_argument('conf_path', type=str, help='Ruta al directorio de configuración')
+    parser.add_argument('--output_dir', type=str, default='results', help='Directorio de salida')
+    parser.add_argument('--freq_min', type=float, default=5.0, help='Frecuencia mínima del rango (Hz)')
+    parser.add_argument('--freq_max', type=float, default=45.0, help='Frecuencia máxima del rango (Hz)')
+    parser.add_argument('--nperseg', type=int, default=None, help='Muestras por segmento Welch (default: fs * 0.5)')
+    parser.add_argument('--r_squared_th', type=float, default=0.9, help='Umbral de r_squared para filtrar')
 
     args = parser.parse_args()
 
-    df, file_name = create_dataframe(args.conf_path)
+    freq_range = (args.freq_min, args.freq_max)
+
+    df, file_name = create_dataframe(
+        args.conf_path,
+        freq_range=freq_range,
+        nperseg=args.nperseg,
+        r_squared_th=args.r_squared_th
+    )
 
     df.to_pickle(os.path.join(args.output_dir, f"15-fooof-{file_name}.pkl"))
 

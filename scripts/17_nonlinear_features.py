@@ -10,9 +10,7 @@ import pandas as pd
 import os
 import sys
 import numpy as np
-from medusa.local_activation.nonlinear_parameters import (
-    sample_entropy, central_tendency_measure
-)
+from ncpi import Features
 import argparse
 
 
@@ -29,6 +27,25 @@ SE_R = 0.059
 
 # CTM parameters
 CTM_R = 0.043
+
+
+def create_features_extractor(feature, **kwargs):
+    """
+    Crea un objeto Features configurado para features no lineales.
+
+    Args:
+        feature: tipo de feature ('se', 'ctm', 'mse', 'lzc')
+        **kwargs: parámetros específicos de la feature
+
+    Returns:
+        Features: objeto configurado para medusa
+    """
+    params = {
+        'feature': feature,
+        'normalize': False,
+        **kwargs
+    }
+    return Features(method='medusa', params=params)
 
 
 # ============ Data loading ============
@@ -87,7 +104,7 @@ def get_cdm_array(conf_path, time, normalize=False, index=3):
 
 def compute_se(cdm_array, m=SE_M, r=SE_R):
     """
-    Computes Sample Entropy. Expects already-normalized input.
+    Computes Sample Entropy using ncpi.Features. Expects already-normalized input.
 
     Args:
         cdm_array: (n_epochs, n_samples, n_trials)
@@ -95,12 +112,13 @@ def compute_se(cdm_array, m=SE_M, r=SE_R):
     Returns:
         np.ndarray of shape (n_epochs, n_trials)
     """
-    return sample_entropy(cdm_array, m=m, r=r)
+    fe = create_features_extractor('se', m=m, r=r)
+    return fe.sample_entropy(signal=cdm_array, m=m, r=r)
 
 
 def compute_ctm(cdm_array, r=CTM_R):
     """
-    Computes Central Tendency Measure on raw CDM.
+    Computes Central Tendency Measure using ncpi.Features on raw CDM.
 
     Args:
         cdm_array: (n_epochs, n_samples, n_trials)
@@ -108,7 +126,8 @@ def compute_ctm(cdm_array, r=CTM_R):
     Returns:
         np.ndarray of shape (n_epochs, n_trials)
     """
-    return central_tendency_measure(cdm_array, r=r)
+    fe = create_features_extractor('ctm', r=r)
+    return fe.central_tendency_measure(signal=cdm_array, r=r)
 
 
 # ============ Main processing ============

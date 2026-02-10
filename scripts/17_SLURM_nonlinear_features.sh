@@ -10,12 +10,16 @@
 #SBATCH --mail-type=END,FAIL
 #SBATCH --mail-user=alexoroval@ugr.es
 
-# Recibe como argumento el directorio de configuración
+# Argumentos:
+#   $1: CONF_PATH (requerido) - directorio de configuración
+#   $2: OUTPUT_DIR (opcional) - directorio de salida (default: results)
+
 CONF_PATH="${1}"
+OUTPUT_DIR="${2:-results}"
 
 if [ -z "$CONF_PATH" ]; then
     echo "Error: se requiere el directorio de configuración como argumento"
-    echo "Uso: sbatch job_nonlinear_analysis.sh <config_dir>"
+    echo "Uso: sbatch 17_SLURM_nonlinear_features.sh <config_dir> [output_dir]"
     exit 1
 fi
 
@@ -24,11 +28,12 @@ source ~/.bashrc
 conda activate ncpi-env
 
 if [ $? -ne 0 ]; then
-    echo "Error: No se pudo activar el entorno conda 'ncpi-sim'"
+    echo "Error: No se pudo activar el entorno conda 'ncpi-env'"
     exit 1
 fi
 
 mkdir -p logs
+mkdir -p "$OUTPUT_DIR"
 
 # Ejecuta el script de análisis de features no lineales
-python 17_nonlinear_features.py "$CONF_PATH"
+python 17_nonlinear_features.py "$CONF_PATH" --output_dir "$OUTPUT_DIR"

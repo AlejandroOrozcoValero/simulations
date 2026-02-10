@@ -6,9 +6,7 @@ import numpy as np
 from scipy.signal import savgol_filter
 from scipy.integrate import trapezoid
 from kneed import KneeLocator
-from medusa.local_activation.nonlinear_parameters import (
-    multiscale_entropy, central_tendency_measure, multiscale_lempelziv_complexity
-)
+from ncpi import Features
 import argparse
 
 
@@ -23,6 +21,25 @@ MSE_R = 0.059
 EPOCH_TIME = 5  # seconds
 CTM_R = 0.043
 LZC_W = [1, 3, 5, 7]
+
+
+def create_features_extractor(feature, **kwargs):
+    """
+    Crea un objeto Features configurado para features no lineales.
+
+    Args:
+        feature: tipo de feature ('mse', 'ctm', 'lzc', 'se')
+        **kwargs: parámetros específicos de la feature
+
+    Returns:
+        Features: objeto configurado para medusa
+    """
+    params = {
+        'feature': feature,
+        'normalize': False,
+        **kwargs
+    }
+    return Features(method='medusa', params=params)
 
 
 # ============ Data loading ============
@@ -90,18 +107,21 @@ def get_cdm_array(conf_path, time=-1, normalize=True, index=3):
 # ============ Feature computation ============
 
 def compute_mse(cdm_array, max_scale=20, m=2, r=0.059):
-    """Calcula Multiscale Entropy usando medusa."""
-    return multiscale_entropy(signal=cdm_array, max_scale=max_scale, m=m, r=r)
+    """Calcula Multiscale Entropy usando ncpi.Features."""
+    fe = create_features_extractor('mse', max_scale=max_scale, m=m, r=r)
+    return fe.multiscale_entropy(signal=cdm_array, max_scale=max_scale, m=m, r=r)
 
 
 def compute_ctm(cdm_array, r):
-    """Calcula Central Tendency Measure usando medusa."""
-    return central_tendency_measure(signal=cdm_array, r=r)
+    """Calcula Central Tendency Measure usando ncpi.Features."""
+    fe = create_features_extractor('ctm', r=r)
+    return fe.central_tendency_measure(signal=cdm_array, r=r)
 
 
 def compute_lzc(cdm_array, W):
-    """Calcula Multiscale Lempel-Ziv Complexity usando medusa."""
-    return multiscale_lempelziv_complexity(signal=cdm_array, W=W)
+    """Calcula Multiscale Lempel-Ziv Complexity usando ncpi.Features."""
+    fe = create_features_extractor('lzc', W=W)
+    return fe.multiscale_lempelziv_complexity(signal=cdm_array, W=W)
 
 
 def summarize_mse(mse_array):
