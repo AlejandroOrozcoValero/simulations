@@ -1,7 +1,7 @@
 #!/bin/bash
 #SBATCH --job-name=mse_analysis
-#SBATCH --output=logs/mse_analysis-%j.out
-#SBATCH --error=logs/mse_analysis-%j.err
+#SBATCH --output=/SCRATCH/TIC117/cmg/alejandro/logs/mse_analysis-%j.out
+#SBATCH --error=/SCRATCH/TIC117/cmg/alejandro/logs/mse_analysis-%j.err
 #SBATCH --time=04:00:00
 #SBATCH --partition=albaicin
 #SBATCH --nodes=1
@@ -30,7 +30,7 @@ if [ $? -ne 0 ]; then
     exit 1
 fi
 
-mkdir -p logs
+mkdir -p /SCRATCH/TIC117/cmg/alejandro/logs
 mkdir -p "$OUTPUT_DIR"
 
 # Ejecuta el script de análisis MSE
