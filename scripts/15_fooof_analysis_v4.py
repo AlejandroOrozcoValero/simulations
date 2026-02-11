@@ -70,8 +70,8 @@ def create_dataframe(CONF_PATH, freq_range=(5., 45.), nperseg=None, r_squared_th
     Returns:
         tuple: (DataFrame con resultados, nombre del archivo)
     """
-    conf_split = CONF_PATH.split('/')
-    conf = conf_split[-2]
+    conf_split = CONF_PATH.rstrip('/').split('/')
+    conf = conf_split[-1]
     print(CONF_PATH)
     print(conf)
     model_type = conf_split[5]

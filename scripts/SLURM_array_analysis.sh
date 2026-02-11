@@ -1,7 +1,7 @@
 #!/bin/bash
 #SBATCH --job-name=array_analysis
-#SBATCH --output=/SCRATCH/TIC117/cmg/alejandro/logs/%x_%A_%a.out
-#SBATCH --error=/SCRATCH/TIC117/cmg/alejandro/logs/%x_%A_%a.err
+#SBATCH --output=/SCRATCH/TIC117/cmg/alejandro/fooof_analysis/logs/%x_%A_%a.out
+#SBATCH --error=/SCRATCH/TIC117/cmg/alejandro/fooof_analysis/logs/%x_%A_%a.err
 #SBATCH --time=02:00:00
 #SBATCH --partition=albaicin
 #SBATCH --nodes=1
