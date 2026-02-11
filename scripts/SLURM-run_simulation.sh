@@ -1,7 +1,7 @@
 #!/bin/bash
 #SBATCH --job-name=lif_array
-#SBATCH --output=logs/sim_%A_%a.out
-#SBATCH --error=logs/sim_%A_%a.err
+#SBATCH --output=/SCRATCH/TIC117/cmg/alejandro/logs/simulations/sim_%A_%a.out
+#SBATCH --error=/SCRATCH/TIC117/cmg/alejandro/logs/simulations/sim_%A_%a.err
 #SBATCH --time=0:30:00
 #SBATCH --partition=albaicin
 #SBATCH --nodes=1
@@ -9,11 +9,13 @@
 # IMPORTANTE: anadir --array=1-N al lanzar con sbatch, donde N = numero de lineas en configs.txt
 # Ejemplo: sbatch --array=1-10 SLURM-run_simulation.sh configs.txt /SCRATCH/TIC117/cmg/alejandro/plasticity_sims/results
 
+
 # --- Argumentos del script ---
 # $1: archivo de configuraciones (default: configs.txt)
 # $2: ruta de guardado (save_path)
 CONFIG_FILE="${1:-configs.txt}"
 SAVE_PATH="${2}"
+
 
 if [ -z "$SAVE_PATH" ]; then
     echo "Error: se requiere save_path como segundo argumento"
@@ -30,8 +32,6 @@ if [ $? -ne 0 ]; then
     exit 1
 fi
 
-# Crear directorio de logs si no existe
-mkdir -p logs
 
 # Leer la linea correspondiente a este task (saltando lineas de comentario #)
 PARAMS=$(grep -v '^#' "$CONFIG_FILE" | sed -n "${SLURM_ARRAY_TASK_ID}p")

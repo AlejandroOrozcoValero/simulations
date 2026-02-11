@@ -5,14 +5,15 @@
 OUTPUT_FILE="config_list.txt"
 
 PARAM_DIRS=(
-    "/SCRATCH/TIC117/cmg/alejandro/no_plast/J_EE_J_IE-v2/Jext2989"
-    "/SCRATCH/TIC117/cmg/alejandro/no_plast/J_EI_J_II-v2/Jext2989"
-    "/SCRATCH/TIC117/cmg/alejandro/no_plast/J_EE_J_IE-v2/Jext32"
-    "/SCRATCH/TIC117/cmg/alejandro/no_plast/J_EI_J_II-v2/Jext32"
+    "/SCRATCH/TIC117/cmg/alejandro/no_plast/J_EE_J_IE/Jext2989"
+    "/SCRATCH/TIC117/cmg/alejandro/no_plast/J_EI_J_II/Jext2989"
+    "/SCRATCH/TIC117/cmg/alejandro/no_plast/J_EE_J_IE/Jext32"
+    "/SCRATCH/TIC117/cmg/alejandro/no_plast/J_EI_J_II/Jext32"
     "/SCRATCH/TIC117/cmg/alejandro/no_plast/tau_syn_E/Jext32"
     "/SCRATCH/TIC117/cmg/alejandro/no_plast/tau_syn_E/Jext2989"
     "/SCRATCH/TIC117/cmg/alejandro/no_plast/tau_syn_I/Jext32"
     "/SCRATCH/TIC117/cmg/alejandro/no_plast/tau_syn_I/Jext2989"
+    "/SCRATCH/TIC117/cmg/alejandro/no_plast/J_ext"
 )
 
 # Limpiar archivo previo

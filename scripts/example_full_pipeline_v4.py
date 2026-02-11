@@ -54,6 +54,7 @@ args = parser.parse_args()
 # =============================================================================
 
 sim_config_path = '/LUSTRE/home/TIC117/cmg/alejandro/ncpi/examples/simulation/Hagen_model/figures'
+tem_output_base = '/SCRATCH/TIC117/cmg/alejandro/temp_sim' # This is for HPC use
 
 zenodo_dw_mult = False
 zenodo_URL_mult = "https://zenodo.org/api/records/15429373"
@@ -198,7 +199,7 @@ job_id = f"{os.environ.get('SLURM_ARRAY_JOB_ID', 'local')}_{os.environ.get('SLUR
 
 for trial in range(trials):
     # Directorio temporal unico por job para evitar conflictos entre jobs paralelos
-    sim_output_dir = os.path.join(sim_config_path, '..', 'simulation', f'output_{job_id}_trial_{trial}')
+    sim_output_dir = os.path.join(tem_output_base, f'output_{job_id}_trial_{trial}')
 
     valid_simulation = True
     print(f'\nTrial {trial+1}/{trials}')

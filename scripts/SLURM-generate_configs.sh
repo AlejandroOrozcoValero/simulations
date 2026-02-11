@@ -1,18 +1,18 @@
 #!/bin/bash
 #SBATCH --job-name=gen_configs
-#SBATCH --output=logs/gen_configs_J_EI-%j.out
-#SBATCH --error=logs/gen_configs_J_EI-%j.err
+#SBATCH --output=/SCRATCH/TIC117/cmg/alejandro/logs/gen_configs_J_EI-%j.out
+#SBATCH --error=/SCRATCH/TIC117/cmg/alejandro/logs/gen_configs_J_EI-%j.err
 #SBATCH --time=00:05:00
 #SBATCH --partition=albaicin
 #SBATCH --nodes=1
 #SBATCH --cpus-per-task=1
-#SBATCH --mail-type=END,FAIL
-#SBATCH --mail-user=alexoroval@ugr.es
 
 # Ejemplo:
 #   sbatch SLURM-generate_configs.sh configs.txt --J_ext 28.0 30.0 32.0
 
-OUTPUT_FILE="${1}"
+SCRATCH_BASE="/SCRATCH/TIC117/cmg/alejandro/configs"
+OUTPUT_NAME="${1}"
+OUTPUT_FILE="${SCRATCH_BASE}/${OUTPUT_NAME}"
 
 if [ -z "$OUTPUT_FILE" ]; then
     echo "Error: se requiere el nombre del archivo de salida como primer argumento"
