@@ -277,6 +277,21 @@ def create_dataframe(CONF_PATH):
     return results, file_name
 
 
+def create_parameter_df(PARAM_PATH):
+    """
+    Create a DataFrame for one parameter with all configurations.
+    """
+    configurations = os.listdir(PARAM_PATH)
+    results_list = []
+    for conf in configurations:
+        conf_path = os.path.join(PARAM_PATH, conf)
+        if not os.path.isdir(conf_path):
+            continue
+        results, _ = create_dataframe(conf_path)
+        results_list.append(results)
+    return pd.DataFrame(results_list)
+
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('conf_path', type=str)
@@ -284,6 +299,14 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    results, file_name = create_dataframe(args.conf_path)
+    conf_path = args.conf_path
+    conf_split = conf_path.rstrip('/').split('/')
+    param = conf_split[6]
+    print(param)
+    if param != 'J_ext':
+        file_name = f"{param}-{conf_split[-1]}"
+    else:
+        file_name = param
 
-    pd.to_pickle(results, os.path.join(args.output_dir, f"16-mse-{file_name}.pkl"))
+    df = create_parameter_df(args.conf_path)
+    df.to_pickle(os.path.join(args.output_dir, f"16-mse-{file_name}.pkl"))
