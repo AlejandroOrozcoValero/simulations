@@ -12,7 +12,7 @@ from ncpi import Features
 
 
 PARAMETERS = ['J_EE', 'J_IE', 'J_EI', 'J_II', 'tau_syn_E', 'tau_syn_I', 'J_ext']
-FREQ_RANGE = (5., 45.)
+FREQ_RANGE = (5., 200.)
 R2=0.9
 
 def load_cdm(trial_path, normalize=True):
