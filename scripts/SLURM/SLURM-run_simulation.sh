@@ -1,11 +1,11 @@
 #!/bin/bash
 #SBATCH --job-name=lif_array
-#SBATCH --output=/SCRATCH/TIC117/cmg/alejandro/logs/simulations/sim_%A_%a.out
-#SBATCH --error=/SCRATCH/TIC117/cmg/alejandro/logs/simulations/sim_%A_%a.err
+#SBATCH --output=/SCRATCH/TIC117/cmg/alejandro/logs/sim_%A_%a.out
+#SBATCH --error=/SCRATCH/TIC117/cmg/alejandro/logs/sim_%A_%a.err
 #SBATCH --time=0:30:00
 #SBATCH --partition=albaicin
 #SBATCH --nodes=1
-#SBATCH --cpus-per-task=14
+#SBATCH --cpus-per-task=10
 # IMPORTANTE: anadir --array=1-N al lanzar con sbatch, donde N = numero de lineas en configs.txt
 # Ejemplo: sbatch --array=1-10 SLURM-run_simulation.sh configs.txt /SCRATCH/TIC117/cmg/alejandro/plasticity_sims/results
 
@@ -53,7 +53,7 @@ J_EXT=$(echo $PARAMS | awk '{print $7}')
 echo "Task $SLURM_ARRAY_TASK_ID: J_EE=$J_EE J_IE=$J_IE J_EI=$J_EI J_II=$J_II tau_syn_E=$TAU_SYN_E tau_syn_I=$TAU_SYN_I J_ext=$J_EXT"
 echo "Save path: $SAVE_PATH"
 
-python example_full_pipeline_v4.py \
+python ../example_full_pipeline_v4.py \
     --J_EE $J_EE \
     --J_IE $J_IE \
     --J_EI $J_EI \

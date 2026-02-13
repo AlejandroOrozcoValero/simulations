@@ -20,6 +20,7 @@ MSE_M = 2
 MSE_R = 0.059
 EPOCH_TIME = 5  # seconds
 CTM_R = 0.043
+# LZC_W = np.arange(51, 200, 2) # Numeros impares del 51 al 200
 LZC_W = [1, 3, 5, 7]
 
 
@@ -93,6 +94,8 @@ def get_cdm_array(conf_path, time=-1, normalize=True, index=3):
         np.ndarray de forma (n_epochs, n_samples, n_trials)
     """
     trials = get_valid_trials(conf_path)
+    if trials == []:
+        return trials
     epoch_list = []
     
     for trial in trials:
@@ -137,19 +140,20 @@ def summarize_mse(mse_array):
     mean_mse = np.mean(mse_array, axis=(0, 2))
     std_mse = np.std(mse_array, axis=(0, 2))
     mean_per_trial = np.mean(mse_array, axis=0)
-
     scales = np.arange(1, mse_array.shape[1] + 1)
-    aucs = []
-    for trial_idx in range(mse_array.shape[2]):
-        trial_mse = np.mean(mse_array[:, :, trial_idx], axis=0)
-        auc = trapezoid(trial_mse, scales)
-        aucs.append(auc)
+
+    # AUC por cada epoch y trial: shape (n_epochs, n_trials)
+    aucs = np.array([
+        [trapezoid(mse_array[epoch, :, trial], scales)
+         for trial in range(mse_array.shape[2])]
+        for epoch in range(mse_array.shape[0])
+    ])
 
     return {
         'mean': mean_mse,
         'std': std_mse,
         'mean_per_trial': mean_per_trial,
-        'auc': np.array(aucs),
+        'auc': aucs,
         'auc_mean': np.mean(aucs),
         'auc_std': np.std(aucs)
     }
@@ -244,6 +248,9 @@ def create_dataframe(CONF_PATH):
     
     # Get CDM array: (n_epochs, n_samples, n_trials)
     cdm_array = get_cdm_array(CONF_PATH, time=EPOCH_TIME, normalize=True, index=3)
+
+    if isinstance(cdm_array, list):
+        return []
     
     # Compute features
     mse = compute_mse(cdm_array, max_scale=MSE_MAX_SCALE, m=MSE_M, r=MSE_R)
@@ -274,7 +281,7 @@ def create_dataframe(CONF_PATH):
         'ctm': ctm,
     }
     
-    return results, file_name
+    return results
 
 
 def create_parameter_df(PARAM_PATH):
@@ -287,7 +294,10 @@ def create_parameter_df(PARAM_PATH):
         conf_path = os.path.join(PARAM_PATH, conf)
         if not os.path.isdir(conf_path):
             continue
-        results, _ = create_dataframe(conf_path)
+        results = create_dataframe(conf_path)
+        if results == []:
+            print(f"{conf_path} has no valid trials. Skipping configuration.")
+            continue
         results_list.append(results)
     return pd.DataFrame(results_list)
 

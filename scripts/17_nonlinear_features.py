@@ -86,7 +86,7 @@ def get_cdm_array(conf_path, time, normalize=False, index=3):
     """
     trials = get_valid_trials(conf_path)
     if not trials:
-        return None
+        return trials
 
     epoch_list = []
     for trial in trials:
@@ -186,6 +186,15 @@ def create_dataframe(CONF_PATH):
     cdm_raw = get_cdm_array(CONF_PATH, time=EPOCH_TIME, normalize=False, index=3)
     cdm_norm = get_cdm_array(CONF_PATH, time=EPOCH_TIME, normalize=True, index=3)
     
+    if isinstance(cdm_raw, list) or isinstance(cdm_norm, list):
+        return []
+    
+    print(cdm_raw)
+    print(f'RAW\n', cdm_raw.shape)
+    print(" ")
+    print(f'Norm\n', cdm_norm)
+    print(cdm_norm.shape)
+    
     # Compute features
     se = compute_se(cdm_norm, m=SE_M, r=SE_R)
     ctm = compute_ctm(cdm_raw, r=CTM_R)
@@ -202,7 +211,7 @@ def create_dataframe(CONF_PATH):
         'ctm_all': ctm,
     }
     
-    return results, file_name
+    return results 
 
 
 def create_parameter_df(PARAM_PATH):
@@ -215,7 +224,10 @@ def create_parameter_df(PARAM_PATH):
         conf_path = os.path.join(PARAM_PATH, conf)
         if not os.path.isdir(conf_path):
             continue
-        results, _ = create_dataframe(conf_path)
+        results = create_dataframe(conf_path)
+        if results == []:
+            print(f'{conf_path} has no valid trials. Skipping configuration.')
+            continue
         results_list.append(results)
     return pd.DataFrame(results_list)
 
