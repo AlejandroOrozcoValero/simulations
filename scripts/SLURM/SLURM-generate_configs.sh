@@ -32,4 +32,4 @@ fi
 
 mkdir -p logs
 
-python generate_param_values.py --output "$OUTPUT_FILE" "$@"
+python ../generate_param_values.py --output "$OUTPUT_FILE" "$@"

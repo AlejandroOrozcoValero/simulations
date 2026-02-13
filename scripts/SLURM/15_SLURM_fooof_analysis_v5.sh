@@ -2,7 +2,7 @@
 #SBATCH --job-name=features-15
 #SBATCH --output=/SCRATCH/TIC117/cmg/alejandro/logs/%x-%A_%a.out
 #SBATCH --error=/SCRATCH/TIC117/cmg/alejandro/logs/%x-%A_%a.err
-#SBATCH --time=4:00:00
+#SBATCH --time=0:30:00
 #SBATCH --partition=albaicin
 #SBATCH --nodes=1
 #SBATCH --cpus-per-task=14
@@ -25,10 +25,10 @@ PARAM_PATH=${PARAM_DIRS[$SLURM_ARRAY_TASK_ID]}
 source ~/.bashrc
 conda activate ncpi-env
 
-OUTPUT_DIR="/SCRATCH/TIC117/cmg/alejandro/fooof_analysis/results"
+OUTPUT_DIR="/SCRATCH/TIC117/cmg/alejandro/mse_analysis/results"
 mkdir -p "$OUTPUT_DIR"
 
 echo "Job array index: $SLURM_ARRAY_TASK_ID"
 echo "Processing: $PARAM_PATH"
 
-python ../15_fooof_analysis_v5.py "$PARAM_PATH" --output_dir "$OUTPUT_DIR"
+python ../16_mse_v3.py "$PARAM_PATH" --output_dir "$OUTPUT_DIR"
