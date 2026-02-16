@@ -184,7 +184,7 @@ if __name__ == "__main__":
     param = conf_split[6]
     print(param)
     if param != 'J_ext':
-        file_name = f"{param}-{conf_split[-1]}"
+        file_name = f"{param}-{conf_split[-1]}-{FREQUENCY_RANGE[0]}_{FREQUENCY_RANGE[1]}"
     else:
         file_name = param
 
