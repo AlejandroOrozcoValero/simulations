@@ -18,6 +18,7 @@ FREQUENCY_RANGE = [30., 45.]  # Alpha band (Hz)
 WINDOW_SIZE_SEC = 5.0  # fEI window size (seconds)
 DFA_THRESHOLD = 0.4  # DFA threshold for fEI
 TRANSIENT_TIME = 0  # Seconds to discard from start of signal
+AVERAGE_TRIALS = False  # If True, average z-scored CDMs across trials before computing fEI/DFA
 
 
 def load_cdm(trial_path, normalize=True):
@@ -112,6 +113,33 @@ def create_dataframe(CONF_PATH):
               if t.startswith('valid') and t.endswith('.pkl')]
     trials = sorted(trials)
 
+    if AVERAGE_TRIALS:
+        # Load all trials, z-score each, then average
+        signals = [load_cdm(os.path.join(CONF_PATH, t), normalize=True) for t in trials]
+        if not signals:
+            return pd.DataFrame()
+        mean_signal = np.mean(signals, axis=0)
+
+        try:
+            result = features_extractor.fEI(sample=mean_signal)
+        except Exception as e:
+            print(f"Error processing averaged signal: {e}")
+            return pd.DataFrame()
+
+        dfa_val = np.squeeze(result['DFA'])
+        fei_outliers = np.squeeze(result['fEI'])
+        fei_raw = np.squeeze(result['fEI_val'])
+        n_outliers = np.squeeze(result['num_outliers'])
+
+        return pd.DataFrame({
+            'ID': [param],
+            'Group': [configs],
+            'DFA': [float(dfa_val)],
+            'fEI': [float(fei_outliers)],
+            'fEI_raw': [float(fei_raw)],
+            'num_outliers': [float(n_outliers)],
+        })
+
     result_dic = {
         'ID': [],
         'Trial': [],
@@ -183,10 +211,11 @@ if __name__ == "__main__":
     conf_split = conf_path.rstrip('/').split('/')
     param = conf_split[6]
     print(param)
+    avg_suffix = "-avg" if AVERAGE_TRIALS else ""
     if param != 'J_ext':
-        file_name = f"{param}-{conf_split[-1]}-{FREQUENCY_RANGE[0]}_{FREQUENCY_RANGE[1]}"
+        file_name = f"{param}-{conf_split[-1]}-{FREQUENCY_RANGE[0]}_{FREQUENCY_RANGE[1]}{avg_suffix}"
     else:
-        file_name = f"{param}-{FREQUENCY_RANGE[0]}_{FREQUENCY_RANGE[1]}"
+        file_name = f"{param}-{FREQUENCY_RANGE[0]}_{FREQUENCY_RANGE[1]}{avg_suffix}"
 
     df = create_parameter_df(args.conf_path)
 
