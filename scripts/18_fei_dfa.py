@@ -14,9 +14,9 @@ import argparse
 
 PARAMETERS = ['J_EE', 'J_IE', 'J_EI', 'J_II', 'tau_syn_E', 'tau_syn_I', 'J_ext']
 FS = 1000. / (10. * 0.0625)  # Sampling frequency
-FREQUENCY_RANGE = [8., 13.]  # Alpha band (Hz)
+FREQUENCY_RANGE = [30., 45.]  # Alpha band (Hz)
 WINDOW_SIZE_SEC = 5.0  # fEI window size (seconds)
-DFA_THRESHOLD = 0.6  # DFA threshold for fEI
+DFA_THRESHOLD = 0.4  # DFA threshold for fEI
 TRANSIENT_TIME = 0  # Seconds to discard from start of signal
 
 
@@ -186,7 +186,7 @@ if __name__ == "__main__":
     if param != 'J_ext':
         file_name = f"{param}-{conf_split[-1]}-{FREQUENCY_RANGE[0]}_{FREQUENCY_RANGE[1]}"
     else:
-        file_name = param
+        file_name = f"{param}-{FREQUENCY_RANGE[0]}_{FREQUENCY_RANGE[1]}"
 
     df = create_parameter_df(args.conf_path)
 

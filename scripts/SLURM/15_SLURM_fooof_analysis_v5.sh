@@ -25,10 +25,10 @@ PARAM_PATH=${PARAM_DIRS[$SLURM_ARRAY_TASK_ID]}
 source ~/.bashrc
 conda activate ncpi-env
 
-OUTPUT_DIR="/SCRATCH/TIC117/cmg/alejandro/mse_analysis/results"
+OUTPUT_DIR="/SCRATCH/TIC117/cmg/alejandro/fei_analysis/results"
 mkdir -p "$OUTPUT_DIR"
 
 echo "Job array index: $SLURM_ARRAY_TASK_ID"
 echo "Processing: $PARAM_PATH"
 
-python ../16_mse_v3.py "$PARAM_PATH" --output_dir "$OUTPUT_DIR"
+python ../18_fei_dfa.py "$PARAM_PATH" --output_dir "$OUTPUT_DIR"
